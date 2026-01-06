@@ -15,7 +15,7 @@ substitutions:
   # Network time servers for your region, enter from lowest to highest priority. To use local servers update as per zones or countries at: https://www.ntppool.org/zone/@
   sntp_server_1: "0.pool.ntp.org"
   sntp_server_2: "1.pool.ntp.org"
-  sntp_server_3: "2.pool.ntp.org"  
+  sntp_server_3: "2.pool.ntp.org"
   # Enables faster network connections, with last connected SSID being connected to and no full scan for SSID being undertaken
   wifi_fast_connect: "false"
   # Define logging level: NONE, ERROR, WARN, INFO, DEBUG (Default), VERBOSE, VERY_VERBOSE
@@ -76,7 +76,7 @@ wifi:
   # Define dns domain / suffix to add to hostname
   domain: "${dns_domain}"
   on_connect:
-  - switch.turn_on: mmwave_sensor
+    - switch.turn_on: mmwave_sensor
 
 captive_portal:
 
@@ -299,8 +299,7 @@ sensor:
   - platform: uptime
     name: "Uptime Sensor"
     id: uptime_sensor
-    type:
-      timestamp
+    type: timestamp
     entity_category: "diagnostic"
 
   - platform: wifi_signal
@@ -361,7 +360,7 @@ sensor:
             - 63.8 -> 157.6
             - 71.5 -> 176.9
             - 79.8 -> 197.1
-            - 84.3 -> 205.7 
+            - 84.3 -> 205.7
       - lambda: "return x + id(illuminance_offset_ui).state;"
       - clamp:
           min_value: 0
@@ -375,15 +374,15 @@ binary_sensor:
       name: Moving Target
     has_still_target:
       name: Still Target
-      
+
   - platform: template
     name: Occupancy
     id: occupancy
     device_class: occupancy
     filters:
-      - delayed_off: !lambda 'return id(occupancy_off_latency).state * 1000.0;'
+      - delayed_off: !lambda "return id(occupancy_off_latency).state * 1000.0;"
     on_state:
-      - lambda: 'id(illuminance_sensor).update();'
+      - lambda: "id(illuminance_sensor).update();"
     lambda: |-
       if ( id(mmwave).state or id(pir_motion_sensor).state) {
         return true;
@@ -420,8 +419,8 @@ binary_sensor:
     name: "Pir Sensor"
     id: pir_motion_sensor
     filters:
-      - delayed_on: !lambda 'return id(pir_on_latency).state * 1000.0;'
-      - delayed_off:  !lambda 'return id(pir_off_latency).state * 1000.0;'
+      - delayed_on: !lambda "return id(pir_on_latency).state * 1000.0;"
+      - delayed_off: !lambda "return id(pir_off_latency).state * 1000.0;"
     device_class: motion
 
 switch:
@@ -432,7 +431,6 @@ switch:
     multi_target:
       name: "Multi Target Tracking"
 
-switch:
   - platform: template
     name: mmWave sensor
     id: mmwave_sensor
@@ -446,7 +444,7 @@ switch:
     turn_off_action:
       - uart.write: "sensorStop"
       - delay: 1s
-      
+
 text_sensor:
   - platform: ld2450
     ld2450_id: mmwave
@@ -477,7 +475,7 @@ text_sensor:
 
   #  Creates a sensor showing when the device was last restarted
   - platform: template
-    name: 'Last Restart'
+    name: "Last Restart"
     id: device_last_restart
     icon: mdi:clock
     entity_category: diagnostic
@@ -515,7 +513,7 @@ number:
         name: Zone-3 X2
       y2:
         name: Zone-3 Y2
-        
+
   - platform: template
     name: Occupancy off latency
     icon: mdi:clock-end
@@ -574,8 +572,7 @@ number:
     icon: "mdi:brightness-5"
     entity_category: config
     on_value:
-      - lambda: 'id(illuminance_sensor).update();'
-
+      - lambda: "id(illuminance_sensor).update();"
 
 select:
   - platform: ld2450
@@ -588,16 +585,16 @@ select:
 time:
   - platform: sntp
     id: sntp_time
-  # Define the timezone of the device
+    # Define the timezone of the device
     timezone: "${timezone}"
-  # Change sync interval from default 5min to 6 hours (or as set in substitutions)
+    # Change sync interval from default 5min to 6 hours (or as set in substitutions)
     update_interval: ${sntp_update_interval}
-  # Set specific sntp servers to use
+    # Set specific sntp servers to use
     servers:
       - "${sntp_server_1}"
       - "${sntp_server_2}"
       - "${sntp_server_3}"
-  # Publish the time the device was last restarted
+    # Publish the time the device was last restarted
     on_time_sync:
       then:
         # Update last restart time, but only once.
