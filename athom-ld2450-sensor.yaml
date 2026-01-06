@@ -2,7 +2,7 @@ substitutions:
   name: "athom-ps02c3mz-sensor"
   friendly_name: "PS02C3MZ Sensor"
   room: ""
-  device_description: "athom esp32c3 ld2450 motion target tracking sensor"
+  device_description: "Multi-Target Tracking mmWave Radar Sensor"
   project_name: "Athom Technology.PS02C3MZ LD2450"
   project_version: "v2.0.3"
   update_interval: 60s
