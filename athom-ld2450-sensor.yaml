@@ -140,7 +140,7 @@ sensor:
     device_class: ""
 
   - platform: bh1750
-    name: "Light Sensor"
+    name: "${room} Illuminance"
     id: illuminance_sensor
     address: 0x23
     update_interval: ${illuminance_update_interval}
@@ -429,9 +429,8 @@ globals:
 
 switch:
   - platform: template
-    name: mmWave sensor
-    id: mmwave_sensor
-    disabled_by_default: True
+    name: "mmWave Sensor"
+    id: "mmwave_sensor"
     entity_category: config
     optimistic: true
     restore_mode: DISABLED
@@ -492,6 +491,89 @@ switch:
       - uart.write: "saveConfig"
       - delay: 3s
       - switch.turn_on: mmwave_sensor
+
+  - platform: template
+    name: "Micro-motion Detection"
+    id: micro_motion_detection
+    entity_category: config
+    icon: mdi:motion-sensor
+    optimistic: true
+    disabled_by_default: true
+    restore_mode: RESTORE_DEFAULT_OFF
+    turn_on_action:
+      - if:
+          condition:
+            lambda: 'return id(mmwave_mode).state == "Distance and Speed";'
+          then:
+            - switch.turn_off: mmwave_sensor
+            - delay: 1s
+            - uart.write: "setMicroMotion 1"
+            - delay: 1s
+            - uart.write: "saveConfig"
+            - delay: 1s
+            - switch.turn_on: mmwave_sensor
+    turn_off_action:
+      - if:
+          condition:
+            lambda: 'return id(mmwave_mode).state == "Distance and Speed";'
+          then:
+            - switch.turn_off: mmwave_sensor
+            - delay: 1s
+            - uart.write: "setMicroMotion 0"
+            - delay: 1s
+            - uart.write: "saveConfig"
+            - delay: 1s
+            - switch.turn_on: mmwave_sensor
+
+select:
+  - platform: template
+    name: "mmWave Mode"
+    id: mmwave_mode
+    entity_category: config
+    icon: mdi:radar
+    optimistic: true
+    disabled_by_default: true
+    options:
+      - "Presence Detection"
+      - "Distance and Speed"
+    initial_option: "Presence Detection"
+    restore_value: true
+    set_action:
+      - switch.turn_off: mmwave_sensor
+      - delay: 1s
+      - if:
+          condition:
+            lambda: 'return x == "Distance and Speed";'
+          then:
+            - uart.write: "setRunApp 1"
+            - delay: 1s
+            - uart.write: "saveConfig"
+            - delay: 1s
+            - switch.turn_on: mmwave_sensor
+            - delay: 2s
+            - switch.turn_on: uart_target_output
+          else:
+            - uart.write: "setRunApp 0"
+            - delay: 1s
+            - uart.write: "saveConfig"
+            - delay: 1s
+            - switch.turn_on: mmwave_sensor
+            - delay: 2s
+            - switch.turn_off: uart_target_output
+
+  - platform: template
+    name: "Distance/Speed Update Rate"
+    id: mmwave_update_rate
+    entity_category: config
+    icon: mdi:timer
+    optimistic: true
+    disabled_by_default: true
+    options:
+      - "0.3s"
+      - "0.4s"
+      - "0.5s"
+    initial_option: "0.5s"
+    restore_value: true
 
 number:
   - platform: template
@@ -771,49 +853,111 @@ number:
       - delay: 1s
       - switch.turn_on: mmwave_sensor
 
-button:
   - platform: template
-    name: Restart mmWave sensor
-    id: restart_mmwave
+    name: mmWave Trigger Sensitivity
+    icon: mdi:target-variant
+    id: mmwave_trigger_sensitivity
+    entity_category: config
+    min_value: 0
+    max_value: 9
+    initial_value: 5
+    optimistic: true
+    step: 1
+    restore_value: true
+    set_action:
+      - if:
+          condition:
+            lambda: 'return id(mmwave_mode).state == "Presence Detection";'
+          then:
+            - switch.turn_off: mmwave_sensor
+            - delay: 1s
+            - uart.write:
+                !lambda std::string mss = "setSensitivity " + to_string(id(mmwave_sensitivity).state) + " " + to_string(id(mmwave_trigger_sensitivity).state);
+                return std::vector<unsigned char>(mss.begin(), mss.end());
+            - delay: 1s
+            - uart.write: "saveConfig"
+            - delay: 1s
+            - switch.turn_on: mmwave_sensor
+
+  - platform: template
+    name: "mmWave Threshold Factor"
+    id: mmwave_threshold_factor
+    entity_category: config
+    icon: mdi:tune-variant
+    disabled_by_default: true
+    min_value: 1
+    max_value: 20
+    initial_value: 5
+    optimistic: true
+    step: 1
+    restore_value: true
+    set_action:
+      - if:
+          condition:
+            lambda: 'return id(mmwave_mode).state == "Distance and Speed";'
+          then:
+            - switch.turn_off: mmwave_sensor
+            - delay: 1s
+            - uart.write: !lambda |-
+                std::string mss = "setThrFactor " + to_string((int)x);
+                return std::vector<unsigned char>(mss.begin(), mss.end());
+            - delay: 1s
+            - uart.write: "saveConfig"
+            - delay: 1s
+            - switch.turn_on: mmwave_sensor
+
+button:
+  - platform: restart
+    name: Restart_internal
+    id: restart_internal
+    entity_category: config
+    internal: true
+  - platform: template
+    name: "Restart mmWave Sensor"
+    id: "restart_mmwave"
     entity_category: config
     internal: true
     on_press:
       - uart.write: "resetSystem"
   - platform: template
-    name: Restart
-    icon: mdi:restart
+    name: Restart $name
     entity_category: config
-    disabled_by_default: True
     on_press:
       - button.press: restart_mmwave
       - button.press: restart_internal
+  - platform: safe_mode
+    internal: false
+    name: $name Safe Mode
+    entity_category: config
   - platform: template
-    name: Factory reset mmWave
-    icon: mdi:cog-counterclockwise
-    id: factory_reset_mmwave
+    name: "Factory Reset mmWave"
+    id: "factory_reset_mmwave"
     internal: ${factory_reset_disabled}
     entity_category: config
     on_press:
       - switch.turn_off: mmwave_sensor
-      - delay: 1s
+      - delay: 2s
       - uart.write: "resetCfg"
       - delay: 3s
+      - uart.write: "setRunApp 0"
+      - delay: 2s
+      - uart.write: "saveConfig"
+      - delay: 3s
       - switch.turn_on: mmwave_sensor
-
-  - platform: factory_reset
-    name: Restart with Factory Default Settings
-    id: Reset
-    entity_category: config
-
-  - platform: restart
-    name: Restart_esp
-    id: restart_esp
-    entity_category: config
-
-  - platform: safe_mode
-    name: "Safe Mode"
-    internal: false
-    entity_category: config
+      - delay: 3s
+      - uart.write: "getRange"
+      - delay: 3s
+      - uart.write: "getSensitivity"
+      - delay: 3s
+      - uart.write: "getLatency"
+      - delay: 3s
+      - uart.write: "getTrigRange"
+      - delay: 3s
+      - lambda: |-
+          id(mmwave_mode).publish_state("Presence Detection");
+          id(micro_motion_detection).publish_state(false);
+          id(mmwave_threshold_factor).publish_state(5.0);
+          id(uart_target_output).publish_state(false);
 
 text_sensor:
   - platform: wifi_info
