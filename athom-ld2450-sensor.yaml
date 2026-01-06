@@ -325,19 +325,6 @@ binary_sensor:
         return id(occupancy).state;
       }
 
-  - platform: gpio
-    pin:
-      number: GPIO9
-      mode: INPUT_PULLUP
-      inverted: true
-    name: "Button"
-    disabled_by_default: true
-    on_multi_click:
-      - timing:
-          - ON for at least 4s
-        then:
-          - button.press: Reset
-
   - platform: status
     name: "Status"
     entity_category: diagnostic
