@@ -376,17 +376,6 @@ binary_sensor:
     has_still_target:
       name: Still Target
       
-  - platform: gpio
-    pin:
-      number: 33
-      mode: INPUT_PULLDOWN
-    name: PIR
-    id: pir_motion_sensor
-    device_class: motion
-    filters:
-      - delayed_on: !lambda 'return id(pir_on_latency).state * 1000.0;'
-      - delayed_off:  !lambda 'return id(pir_off_latency).state * 1000.0;'
-      
   - platform: template
     name: Occupancy
     id: occupancy
@@ -431,8 +420,8 @@ binary_sensor:
     name: "Pir Sensor"
     id: pir_motion_sensor
     filters:
-      - delayed_on: 50ms
-      - delayed_off: 10s
+      - delayed_on: !lambda 'return id(pir_on_latency).state * 1000.0;'
+      - delayed_off:  !lambda 'return id(pir_off_latency).state * 1000.0;'
     device_class: motion
 
 switch:
