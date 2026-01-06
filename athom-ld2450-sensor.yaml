@@ -404,19 +404,13 @@ binary_sensor:
           - light.turn_on: esp32_led
           - button.press: factory_reset_button
 
-  - platform: gpio
-    name: ${room} mmWave
-    id: mmwave
-    device_class: occupancy
-    pin:
-      number: GPIO4
-      mode: INPUT_PULLDOWN
   - platform: template
     name: "Occupancy"
     device_class: occupancy
     id: occupancy
     filters:
       - delayed_off: !lambda return (id(off_delay).state * 1000);
+
   - platform: template
     name: "Zone 1 Occupancy"
     device_class: occupancy
