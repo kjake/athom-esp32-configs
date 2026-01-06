@@ -365,7 +365,7 @@ uart:
 
           std::string line(bytes.begin(), bytes.end());
 
-          if (line.substr(0, 6) == "$JYRPO") {
+          if (line.substr(0, 6) == "JYRPO") {
               size_t pos = 0;
               std::vector<std::string> v;
               std::string token;
