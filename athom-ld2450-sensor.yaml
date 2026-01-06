@@ -108,12 +108,12 @@ uart:
   stop_bits: 1
 
 ld2450:
-  id: mmwave_sensor
+  id: mmwave
   uart_id: uart_ld2450
 
 button:
   - platform: ld2450
-    ld2450_id: mmwave_sensor
+    ld2450_id: mmwave
     factory_reset:
       name: "LD2450 Factory Reset"
       entity_category: "config"
@@ -138,7 +138,7 @@ button:
 
 sensor:
   - platform: ld2450
-    ld2450_id: mmwave_sensor
+    ld2450_id: mmwave
     target_count:
       name: Presence Target Count
       id: target_count
@@ -368,7 +368,7 @@ sensor:
 
 binary_sensor:
   - platform: ld2450
-    ld2450_id: mmwave_sensor
+    ld2450_id: mmwave
     has_target:
       name: Presence
     has_moving_target:
@@ -426,15 +426,30 @@ binary_sensor:
 
 switch:
   - platform: ld2450
-    ld2450_id: mmwave_sensor
+    ld2450_id: mmwave
     bluetooth:
       name: "Bluetooth"
     multi_target:
       name: "Multi Target Tracking"
 
+switch:
+  - platform: template
+    name: mmWave sensor
+    id: mmwave_sensor
+    disabled_by_default: True
+    entity_category: config
+    optimistic: true
+    restore_mode: DISABLED
+    turn_on_action:
+      - uart.write: "sensorStart"
+      - delay: 1s
+    turn_off_action:
+      - uart.write: "sensorStop"
+      - delay: 1s
+      
 text_sensor:
   - platform: ld2450
-    ld2450_id: mmwave_sensor
+    ld2450_id: mmwave
     version:
       name: "LD2450 Firmware"
     mac_address:
@@ -470,7 +485,7 @@ text_sensor:
 
 number:
   - platform: ld2450
-    ld2450_id: mmwave_sensor
+    ld2450_id: mmwave
     presence_timeout:
       name: "Timeout"
     zone_1:
@@ -564,7 +579,7 @@ number:
 
 select:
   - platform: ld2450
-    ld2450_id: mmwave_sensor
+    ld2450_id: mmwave
     baud_rate:
       name: "Baud rate"
     zone_type:
