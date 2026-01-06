@@ -278,22 +278,23 @@ binary_sensor:
         - sensor.template.publish:
             id: target_4_snr
             state: 0
-        - platform: template
-          name: "Target 1 Active" # Don't change
-          disabled_by_default: False
-          id: target_1_active
-        - platform: template
-          name: "Target 2 Active" # Don't change
-          disabled_by_default: True
-          id: target_2_active
-        - platform: template
-          name: "Target 3 Active" # Don't change
-          disabled_by_default: True
-          id: target_3_active
-        - platform: template
-          name: "Target 4 Active" # Don't change
-          disabled_by_default: True
-          id: target_4_active
+
+  - platform: template
+    name: "Target 1 Active" # Don't change
+    disabled_by_default: False
+    id: target_1_active
+  - platform: template
+    name: "Target 2 Active" # Don't change
+    disabled_by_default: True
+    id: target_2_active
+  - platform: template
+    name: "Target 3 Active" # Don't change
+    disabled_by_default: True
+    id: target_3_active
+  - platform: template
+    name: "Target 4 Active" # Don't change
+    disabled_by_default: True
+    id: target_4_active
 
   - platform: gpio
     pin:
