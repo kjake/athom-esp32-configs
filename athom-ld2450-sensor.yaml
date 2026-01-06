@@ -107,10 +107,10 @@ dashboard_import:
 
 light:
   - platform: status_led
-    name: "Status LED"
+    name: ESP32 LED
     id: esp32_led
     pin: GPIO2
-    disabled_by_default: true
+    restore_mode: ALWAYS_OFF
     entity_category: config
 
 i2c:
@@ -380,6 +380,32 @@ sensor:
     entity_category: diagnostic
 
 binary_sensor:
+  - platform: gpio
+    pin:
+      number: 9
+      mode: INPUT_PULLUP
+      inverted: true
+    id: flash_button
+    filters:
+      - delayed_on: 50ms
+    on_multi_click:
+      - timing:
+          - ON for 0.2s to 3s
+          - OFF for 0.1s to 2s
+          - ON for 0.2s to 3s
+          - OFF for 0.1s to 2s
+          - ON for at least 5s
+        then:
+          - repeat:
+              count: 5
+              then:
+                - light.turn_on: esp32_led
+                - delay: 150ms
+                - light.turn_off: esp32_led
+                - delay: 150ms
+          - light.turn_on: esp32_led
+          - button.press: factory_reset_button
+
   - platform: gpio
     name: ${room} mmWave
     id: mmwave
@@ -787,6 +813,22 @@ select:
             }
 
 number:
+  - platform: template
+    name: "Illuminance Offset"
+    id: illuminance_offset_ui
+    unit_of_measurement: "lx"
+    min_value: -100
+    max_value: 100
+    step: 5
+    mode: slider
+    update_interval: never
+    optimistic: true
+    restore_value: true
+    initial_value: 0
+    icon: "mdi:brightness-5"
+    entity_category: config
+    on_value:
+      - lambda: "id(illuminance_sensor).update();"
   - platform: template
     name: "Occupancy Off Delay"
     id: off_delay
@@ -1362,6 +1404,13 @@ button:
         - switch.turn_off: mmwave_configuration
         - delay: 2s
         - button.press: reboot_mmwave_sensor
+  - platform: restart
+    icon: mdi:power-cycle
+    name: "ESP Reboot"
+    entity_category: config
+  - platform: factory_reset
+    id: "factory_reset_button"
+    internal: True
 
 text:
   - platform: template
