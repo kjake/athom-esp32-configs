@@ -1,0 +1,210 @@
+esphome:
+  name: "${name}"
+  friendly_name: "${friendly_name}"
+  comment: Multi-Target Tracking mmWave Radar Sensor
+  name_add_mac_suffix: True
+  project:
+    name: "Everything Smart Technology.Athom PS02C3MZ" #Fake
+    version: "1.0"
+  platformio_options:
+    board_build.flash_mode: dio
+
+esp32:
+  board: esp32-c3-devkitm-1
+  flash_size: 4MB
+  framework:
+    type: esp-idf
+    version: recommended
+
+# Enable logging
+logger:
+  baud_rate: 115200
+  hardware_uart: UART0
+  level: ${log_level}
+
+# Enable Home Assistant API
+api:
+
+ota:
+  - platform: esphome
+    id: ota_esphome
+  - platform: http_request
+    id: ota_http_request
+
+wifi:
+
+improv_serial:
+
+i2c:
+  - id: bus_a
+    sda: 18
+    scl: 19
+    scan: true
+
+light:
+  - platform: status_led
+    name: ESP32 LED
+    id: esp32_led
+    pin: GPIO2
+    restore_mode: ALWAYS_OFF
+    entity_category: config
+
+binary_sensor:
+  - platform: gpio
+    pin:
+      number: 3
+      mode: INPUT_PULLUP
+    name: ${room} PIR
+    id: pir_motion_sensor
+    device_class: motion
+    filters:
+      - delayed_on: !lambda "return id(pir_on_latency).state * 1000;"
+      - delayed_off: !lambda "return id(pir_off_latency).state * 1000;"
+
+  - platform: template
+    name: ${room} Occupancy
+    id: occupancy
+    device_class: occupancy
+    filters:
+      - delayed_off: !lambda "return id(off_delay).state * 1000;"
+    on_state:
+      - lambda: "id(illuminance_sensor).update();"
+    lambda: |-
+      if ( id(mmwave).state or id(pir_motion_sensor).state) {
+        return true;
+      } 
+      else if (id(mmwave).state == 0 and id(pir_motion_sensor).state == 0) {
+        return false;
+      } else {
+        return id(mmwave).state;
+      }
+
+number:
+  - platform: template
+    name: "PIR Off Delay"
+    icon: mdi:clock-end
+    entity_category: config
+    id: pir_off_latency
+    min_value: 1
+    max_value: 120
+    initial_value: 10
+    optimistic: true
+    step: 1
+    restore_value: true
+    unit_of_measurement: seconds
+    mode: slider
+  - platform: template
+    name: "PIR On Delay"
+    icon: mdi:clock-start
+    entity_category: config
+    id: pir_on_latency
+    min_value: 0
+    max_value: 1
+    initial_value: 0
+    optimistic: true
+    step: 0.1
+    restore_value: true
+    unit_of_measurement: seconds
+    mode: slider
+    disabled_by_default: true
+  - platform: template
+    name: "Illuminance Offset"
+    id: illuminance_offset_ui
+    unit_of_measurement: "lx"
+    min_value: -100
+    max_value: 100
+    step: 5
+    mode: slider
+    update_interval: never
+    optimistic: true
+    restore_value: true
+    initial_value: 0
+    icon: "mdi:brightness-5"
+    entity_category: config
+    on_value:
+      - lambda: "id(illuminance_sensor).update();"
+
+sensor:
+  - platform: bh1750
+    name: "${room} Illuminance"
+    id: illuminance_sensor
+    address: 0x23
+    update_interval: ${illuminance_update_interval}
+    accuracy_decimals: 1
+    filters:
+      - calibrate_linear:
+          method: exact
+          datapoints:
+            - 0.3 -> 0.3
+            - 0.9 -> 1.7
+            - 1.2 -> 3.6
+            - 3.2 -> 6.9
+            - 5.1 -> 10.2
+            - 6.8 -> 27.1
+            - 7.0 -> 13.5
+            - 7.4 -> 28.2
+            - 8.7 -> 21.7
+            - 8.9 -> 17.1
+            - 10.9 -> 20.4
+            - 12.8 -> 23.5
+            - 14.5 -> 31.2
+            - 14.9 -> 26.7
+            - 16.8 -> 41.1
+            - 16.9 -> 30.2
+            - 18.8 -> 33.4
+            - 19.1 -> 35.8
+            - 20.7 -> 37.0
+            - 24.3 -> 60.3
+            - 26.1 -> 68.6
+            - 26.7 -> 83.8
+            - 30.2 -> 75.9
+            - 32.6 -> 80.3
+            - 34.6 -> 83.2
+            - 40.4 -> 99.9
+            - 48.0 -> 183.7
+            - 48.3 -> 119.2
+            - 55.5 -> 141.3
+            - 55.8 -> 137.9
+            - 63.8 -> 157.6
+            - 71.5 -> 176.9
+            - 79.8 -> 197.1
+            - 84.3 -> 205.7
+      - lambda: "return x + id(illuminance_offset_ui).state;"
+      - clamp:
+          min_value: 0
+
+binary_sensor:
+  - platform: gpio
+    pin:
+      number: 9
+      mode: INPUT_PULLUP
+      inverted: true
+    id: flash_button
+    filters:
+      - delayed_on: 50ms
+    on_multi_click:
+      - timing:
+          - ON for 0.2s to 3s
+          - OFF for 0.1s to 2s
+          - ON for 0.2s to 3s
+          - OFF for 0.1s to 2s
+          - ON for at least 5s
+        then:
+          - repeat:
+              count: 5
+              then:
+                - light.turn_on: esp32_led
+                - delay: 150ms
+                - light.turn_off: esp32_led
+                - delay: 150ms
+          - light.turn_on: esp32_led
+          - button.press: factory_reset_button
+
+button:
+  - platform: restart
+    icon: mdi:power-cycle
+    name: "ESP Reboot"
+    entity_category: config
+  - platform: factory_reset
+    id: "factory_reset_button"
+    internal: True
