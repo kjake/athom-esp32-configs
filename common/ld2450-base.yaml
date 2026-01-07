@@ -328,7 +328,7 @@ switch:
 
 binary_sensor:
   - platform: template
-    name: "Occupancy"
+    name: "${room} Occupancy"
     device_class: occupancy
     id: occupancy
     filters:
