@@ -3,11 +3,15 @@ substitutions:
   hidden_ssid: "false"
   log_level: "INFO"
 
-dashboard_import:
-  package_import_url: github://kjake/athom-esp32-configs/athom-ld2450-sensor.yaml@main
-  import_full_config: false # or true
-
 packages:
-  device_base: !include common/ps02c3mz-base.yaml
-  ld2450_base: !include common/ld2450-base.yaml
-  bluetooth_base: !include common/bluetooth-base.yaml
+  package_import_url:
+    url: https://github.com/kjake/athom-esp32-configs
+    files:
+      [
+        athom-ld2450-sensor.yaml,
+        common/ps02c3mz-base.yaml,
+        common/ld2450-base.yaml,
+        common/bluetooth-base.yaml,
+      ]
+    ref: main
+    refresh: 1d
