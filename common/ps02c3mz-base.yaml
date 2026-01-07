@@ -4,7 +4,7 @@ esphome:
   comment: Multi-Target Tracking mmWave Radar Sensor
   name_add_mac_suffix: True
   project:
-    name: "Everything Smart Technology.Athom PS02C3MZ" #Fake
+    name: "EverythingSmartTechnology.Athom PS02C3MZ" #Fake
     version: "1.0"
   platformio_options:
     board_build.flash_mode: dio
