@@ -9,6 +9,10 @@ esphome:
   platformio_options:
     board_build.flash_mode: dio
 
+dashboard_import:
+  package_import_url: github://kjake/athom-esp32-configs/athom-ld2450-sensor.yaml@main
+  import_full_config: false
+
 esp32:
   board: esp32-c3-devkitm-1
   flash_size: 4MB
@@ -48,40 +52,6 @@ light:
     pin: GPIO2
     restore_mode: ALWAYS_OFF
     entity_category: config
-
-dashboard_import:
-  package_import_url: github://kjake/athom-esp32-configs/athom-ld2450-sensor.yaml@main
-  import_full_config: false
-
-binary_sensor:
-  - platform: gpio
-    pin:
-      number: 3
-      mode: INPUT_PULLUP
-    name: ${room} PIR
-    id: pir_motion_sensor
-    device_class: motion
-    filters:
-      - delayed_on: !lambda "return id(pir_on_latency).state * 1000;"
-      - delayed_off: !lambda "return id(pir_off_latency).state * 1000;"
-
-  - platform: template
-    name: ${room} Occupancy
-    id: occupancy
-    device_class: occupancy
-    filters:
-      - delayed_off: !lambda "return id(off_delay).state * 1000;"
-    on_state:
-      - lambda: "id(illuminance_sensor).update();"
-    lambda: |-
-      if ( id(mmwave).state or id(pir_motion_sensor).state) {
-        return true;
-      } 
-      else if (id(mmwave).state == 0 and id(pir_motion_sensor).state == 0) {
-        return false;
-      } else {
-        return id(mmwave).state;
-      }
 
 number:
   - platform: template
@@ -203,6 +173,34 @@ binary_sensor:
                 - delay: 150ms
           - light.turn_on: esp32_led
           - button.press: factory_reset_button
+  - platform: gpio
+    pin:
+      number: 3
+      mode: INPUT_PULLUP
+    name: ${room} PIR
+    id: pir_motion_sensor
+    device_class: motion
+    filters:
+      - delayed_on: !lambda "return id(pir_on_latency).state * 1000;"
+      - delayed_off: !lambda "return id(pir_off_latency).state * 1000;"
+
+  - platform: template
+    name: ${room} Occupancy
+    id: occupancy
+    device_class: occupancy
+    filters:
+      - delayed_off: !lambda "return id(off_delay).state * 1000;"
+    on_state:
+      - lambda: "id(illuminance_sensor).update();"
+    lambda: |-
+      if ( id(mmwave).state or id(pir_motion_sensor).state) {
+        return true;
+      } 
+      else if (id(mmwave).state == 0 and id(pir_motion_sensor).state == 0) {
+        return false;
+      } else {
+        return id(mmwave).state;
+      }
 
 button:
   - platform: restart
