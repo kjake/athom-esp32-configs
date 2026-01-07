@@ -328,22 +328,24 @@ switch:
 
 binary_sensor:
   - platform: template
+    name: "${room} mmWave"
+    id: mmwave
+    device_class: occupancy
+    on_state:
+      - lambda: |-
+          id(illuminance_sensor).update();
+
+  - platform: template
     name: "${room} Occupancy"
     device_class: occupancy
     id: occupancy
     filters:
       - delayed_off: !lambda return (id(off_delay).state * 1000);
     on_state:
-      - lambda: "id(illuminance_sensor).update();"
+      - lambda: |-
+          id(illuminance_sensor).update();
     lambda: |-
-      if ( id(occupancy).state or id(pir_motion_sensor).state) {
-        return true;
-      } 
-      else if (id(occupancy).state == 0 and id(pir_motion_sensor).state == 0) {
-        return false;
-      } else {
-        return id(occupancy).state;
-      }
+      return (id(mmwave).state || id(pir_motion_sensor).state);
 
   - platform: template
     name: "Zone 1 Occupancy"
@@ -2062,7 +2064,7 @@ uart:
               occ_now = true;
             }
           }
-          id(occupancy).publish_state(occ_now);
+          id(mmwave).publish_state(occ_now);
           bool hold_active = (assumed_present_until != 0 && millis() < assumed_present_until);
           id(assumed_present_active) = hold_active;
           id(assumed_present_until_ms) = assumed_present_until;
