@@ -327,13 +327,24 @@ switch:
     disabled_by_default: false
 
 binary_sensor:
-  - platform: gpio
-    name: Occupancy
-    id: mmwave
+  - platform: template
+    name: "Occupancy"
     device_class: occupancy
-    pin:
-      number: GPIO4
-      mode: INPUT_PULLDOWN
+    id: occupancy
+    filters:
+      - delayed_off: !lambda return (id(off_delay).state * 1000);
+    on_state:
+      - lambda: "id(illuminance_sensor).update();"
+    lambda: |-
+      if ( id(occupancy).state or id(pir_motion_sensor).state) {
+        return true;
+      } 
+      else if (id(occupancy).state == 0 and id(pir_motion_sensor).state == 0) {
+        return false;
+      } else {
+        return id(occupancy).state;
+      }
+
   - platform: template
     name: "Zone 1 Occupancy"
     device_class: occupancy

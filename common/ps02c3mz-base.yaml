@@ -182,24 +182,6 @@ binary_sensor:
       - delayed_on: !lambda "return id(pir_on_latency).state * 1000;"
       - delayed_off: !lambda "return id(pir_off_latency).state * 1000;"
 
-  - platform: template
-    name: ${room} Occupancy
-    id: occupancy
-    device_class: occupancy
-    filters:
-      - delayed_off: !lambda "return id(off_delay).state * 1000;"
-    on_state:
-      - lambda: "id(illuminance_sensor).update();"
-    lambda: |-
-      if ( id(mmwave).state or id(pir_motion_sensor).state) {
-        return true;
-      } 
-      else if (id(mmwave).state == 0 and id(pir_motion_sensor).state == 0) {
-        return false;
-      } else {
-        return id(mmwave).state;
-      }
-
 button:
   - platform: restart
     icon: mdi:power-cycle
