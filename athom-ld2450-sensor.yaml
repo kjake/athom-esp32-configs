@@ -11,4 +11,3 @@ packages:
   device_base: !include common/ps02c3mz-base.yaml
   ld2450_base: !include common/ld2450-base.yaml
   bluetooth_base: !include common/bluetooth-base.yaml
-  refresh: 1d
