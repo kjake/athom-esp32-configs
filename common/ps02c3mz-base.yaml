@@ -1,11 +1,26 @@
 esphome:
-  name: "${name}"
-  friendly_name: "${friendly_name}"
+  name: ${name}
   comment: Multi-Target Tracking mmWave Radar Sensor
+  friendly_name: ${friendly_name}
   name_add_mac_suffix: True
   project:
-    name: "EverythingSmartTechnology.Athom PS02C3MZ" #Fake
-    version: "1.0"
+    name: EverythingSmartTechnology.Athom PS02C3MZ
+    version: "1.4.2"
+  on_boot:
+    priority: -100
+    then:
+      - lambda: |-
+          if (std::string("${ device_config.bluetooth_enabled | lower }") == "true") {
+            id(firmware_ble).publish_state("Enabled");
+          } else {
+            id(firmware_ble).publish_state("Disabled");
+          }
+
+          if (std::string("${ device_config.co2_enabled | lower }") == "true") {
+            id(firmware_co2).publish_state("Enabled");
+          } else {
+            id(firmware_co2).publish_state("Disabled");
+          }
   platformio_options:
     board_build.flash_mode: dio
 
@@ -102,46 +117,12 @@ sensor:
     id: illuminance_sensor
     address: 0x23
     update_interval: ${illuminance_update_interval}
-    accuracy_decimals: 1
+    accuracy_decimals: 0
     filters:
-      - calibrate_linear:
-          method: exact
-          datapoints:
-            - 0.3 -> 0.3
-            - 0.9 -> 1.7
-            - 1.2 -> 3.6
-            - 3.2 -> 6.9
-            - 5.1 -> 10.2
-            - 6.8 -> 27.1
-            - 7.0 -> 13.5
-            - 7.4 -> 28.2
-            - 8.7 -> 21.7
-            - 8.9 -> 17.1
-            - 10.9 -> 20.4
-            - 12.8 -> 23.5
-            - 14.5 -> 31.2
-            - 14.9 -> 26.7
-            - 16.8 -> 41.1
-            - 16.9 -> 30.2
-            - 18.8 -> 33.4
-            - 19.1 -> 35.8
-            - 20.7 -> 37.0
-            - 24.3 -> 60.3
-            - 26.1 -> 68.6
-            - 26.7 -> 83.8
-            - 30.2 -> 75.9
-            - 32.6 -> 80.3
-            - 34.6 -> 83.2
-            - 40.4 -> 99.9
-            - 48.0 -> 183.7
-            - 48.3 -> 119.2
-            - 55.5 -> 141.3
-            - 55.8 -> 137.9
-            - 63.8 -> 157.6
-            - 71.5 -> 176.9
-            - 79.8 -> 197.1
-            - 84.3 -> 205.7
       - lambda: "return x + id(illuminance_offset_ui).state;"
+      - or:
+          - delta: 5%
+          - delta: 5
       - clamp:
           min_value: 0
 
@@ -152,6 +133,7 @@ binary_sensor:
       mode: INPUT_PULLUP
       inverted: true
     id: flash_button
+    internal: True
     filters:
       - delayed_on: 50ms
     on_multi_click:
@@ -190,3 +172,28 @@ button:
   - platform: factory_reset
     id: "factory_reset_button"
     internal: True
+
+select:
+  - platform: template
+    id: firmware_ble
+    name: Bluetooth Proxy
+    icon: "mdi:bluetooth"
+    entity_category: diagnostic
+    optimistic: true
+    restore_value: true
+    options:
+      - "Disabled"
+      - "Enabled"
+    initial_option: "Disabled"
+
+  - platform: template
+    id: firmware_co2
+    name: CO2 Sensor
+    icon: "mdi:molecule-co2"
+    entity_category: diagnostic
+    optimistic: true
+    restore_value: true
+    options:
+      - "Disabled"
+      - "Enabled"
+    initial_option: "Disabled"

@@ -3,6 +3,13 @@ substitutions:
   hidden_ssid: "false"
   log_level: "NONE"
 
+  device_config:
+    ethernet_enabled: false
+    co2_enabled: false
+    bluetooth_enabled: true
+    sensor_variant: "ld2450"
+    model: "everything-presence-lite"
+
 dashboard_import:
   package_import_url: github://kjake/athom-esp32-configs/athom-ld2450-sensor.yaml@main
   import_full_config: false
