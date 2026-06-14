@@ -1,0 +1,43 @@
+# Tracked upstream sources for scripts/sync-upstream.py.
+#
+# Each entry mirrors a single file from an upstream repository.
+#
+# - url:     Raw URL fetched on every sync. Pin to a branch (main) or a tag.
+# - vendor:  Path to the pristine copy stored in this repo. Auto-updated.
+# - derived: Optional path to a local file that is a customized version of the
+#            upstream. When set, the sync script performs a git-style 3-way
+#            merge: base=previous vendored copy, theirs=newly fetched upstream,
+#            ours=current derived file. Conflicts surface in the PR for the
+#            user to resolve.
+#
+# To add a new upstream tracking entry, append below and (optionally) seed the
+# vendor file by running scripts/sync-upstream.py locally with --bootstrap.
+
+sources:
+  - name: epl-everything-presence-lite-base
+    url: https://raw.githubusercontent.com/EverythingSmartHome/everything-presence-lite/main/common/everything-presence-lite-base.yaml
+    vendor: upstream/everything-presence-lite/common/everything-presence-lite-base.yaml
+    # No derived: this file inspires common/ps02c3mz-base.yaml and
+    # common/ps02c3-base.yaml but diverges too much for a useful auto-merge.
+    # Workflow surfaces upstream changes for manual triage.
+
+  - name: epl-ld2450-base
+    url: https://raw.githubusercontent.com/EverythingSmartHome/everything-presence-lite/main/common/ld2450-base.yaml
+    vendor: upstream/everything-presence-lite/common/ld2450-base.yaml
+    derived: common/ld2450-base.yaml
+
+  - name: epl-sen0609-base
+    url: https://raw.githubusercontent.com/EverythingSmartHome/everything-presence-lite/main/common/sen0609-base.yaml
+    vendor: upstream/everything-presence-lite/common/sen0609-base.yaml
+    derived: common/sen0609-base.yaml
+
+  - name: epl-co2-module
+    url: https://raw.githubusercontent.com/EverythingSmartHome/everything-presence-lite/main/common/modules/co2.yaml
+    vendor: upstream/everything-presence-lite/common/modules/co2.yaml
+    # Reference only; CO2 is not wired into Athom variants today.
+
+  - name: athom-tech-ld2450-sensor
+    url: https://raw.githubusercontent.com/athom-tech/esp32-configs/main/athom-ld2450-sensor.yaml
+    vendor: upstream/athom-tech/athom-ld2450-sensor.yaml
+    # Reference only; athom-ld2450-sensor.yaml at the repo root is the user-
+    # facing entry point and uses the EPL-style package layout instead.
