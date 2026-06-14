@@ -7,7 +7,7 @@ ESPHome configurations for Athom ESP32 devices, layered with the
 
 | Entry yaml | Device | mmWave chip | Targets |
 | ---------- | ------ | ----------- | ------- |
-| [`athom-ld2450-sensor.yaml`](athom-ld2450-sensor.yaml) | Athom PS02C3MZ | LD2450 | 3 |
+| [`athom-ps02c3mz-sensor.yaml`](athom-ps02c3mz-sensor.yaml) | Athom PS02C3MZ | LD2450 | 3 |
 | [`athom-ps02c3-sensor.yaml`](athom-ps02c3-sensor.yaml) | Athom PS02C3 | S3KM111L (SEN0609-compatible) | 1 |
 
 Both devices share the same I²C BH1750 luminance sensor, the same PIR,
@@ -18,7 +18,7 @@ PS02C3, an extra digital occupancy output on GPIO4.
 
 ```
 .
-├── athom-ld2450-sensor.yaml      # PS02C3MZ entry — used by dashboard import
+├── athom-ps02c3mz-sensor.yaml    # PS02C3MZ entry — used by dashboard import
 ├── athom-ps02c3-sensor.yaml      # PS02C3 entry — used by dashboard import
 ├── common/
 │   ├── bluetooth-base.yaml       # Bluetooth proxy fragment
