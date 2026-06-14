@@ -29,7 +29,7 @@ jobs:
       max-parallel: 3
       matrix:
         file:
-          - athom-ld2450-sensor-test
+          - athom-ps02c3mz-sensor-test
           - athom-ps02c3-sensor-test
         esphome-version:
           - stable

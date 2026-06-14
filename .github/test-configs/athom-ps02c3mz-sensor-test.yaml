@@ -1,0 +1,11 @@
+# CI-only wrapper that supplies the substitutions a real user fills in
+# through the dashboard import flow. Keeps athom-ps02c3mz-sensor.yaml at the
+# repo root clean for end-user consumption.
+
+substitutions:
+  name: "ci-athom-ps02c3mz-sensor"
+  friendly_name: "CI PS02C3MZ Sensor"
+  room: "CI"
+
+packages:
+  entry: !include ../../athom-ps02c3mz-sensor.yaml

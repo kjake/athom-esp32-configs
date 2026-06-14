@@ -7,11 +7,13 @@ substitutions:
     ethernet_enabled: false
     co2_enabled: false
     bluetooth_enabled: true
+    board_revision: "ps02c3mz"
     sensor_variant: "ld2450"
+    firmware_channel: "stable"
     model: "everything-presence-lite"
 
 dashboard_import:
-  package_import_url: github://kjake/athom-esp32-configs/athom-ld2450-sensor.yaml@main
+  package_import_url: github://kjake/athom-esp32-configs/athom-ps02c3mz-sensor.yaml@main
   import_full_config: false
 
 packages:

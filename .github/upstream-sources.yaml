@@ -39,5 +39,13 @@ sources:
   - name: athom-tech-ld2450-sensor
     url: https://raw.githubusercontent.com/athom-tech/esp32-configs/main/athom-ld2450-sensor.yaml
     vendor: upstream/athom-tech/athom-ld2450-sensor.yaml
-    # Reference only; athom-ld2450-sensor.yaml at the repo root is the user-
-    # facing entry point and uses the EPL-style package layout instead.
+    # Reference only; athom-ps02c3mz-sensor.yaml at the repo root is the
+    # user-facing entry point and uses the EPL-style package layout instead.
+
+  - name: athom-tech-presence-sensor-v3
+    url: https://raw.githubusercontent.com/athom-tech/esp32-configs/main/athom-presence-sensor-v3.yaml
+    vendor: upstream/athom-tech/athom-presence-sensor-v3.yaml
+    # Reference only; this is Athom's PS02C3 config (their project_name
+    # string labels it "PS01C3" but the GPIO map is PS02C3's). We keep our
+    # own athom-ps02c3-sensor.yaml using the EPL-style package layout, but
+    # mirror Athom's upstream so we notice any pinout / firmware changes.

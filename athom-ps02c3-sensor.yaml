@@ -7,7 +7,9 @@ substitutions:
     ethernet_enabled: false
     co2_enabled: false
     bluetooth_enabled: true
+    board_revision: "ps02c3"
     sensor_variant: "sen0609"
+    firmware_channel: "stable"
     model: "everything-presence-lite"
 
 dashboard_import:
