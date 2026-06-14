@@ -1,0 +1,11 @@
+# CI-only wrapper that supplies the substitutions a real user fills in
+# through the dashboard import flow. Keeps athom-ld2450-sensor.yaml at the
+# repo root clean for end-user consumption.
+
+substitutions:
+  name: "ci-athom-ld2450-sensor"
+  friendly_name: "CI LD2450 Sensor"
+  room: "CI"
+
+packages:
+  entry: !include ../../athom-ld2450-sensor.yaml

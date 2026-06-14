@@ -9,3 +9,6 @@
 **/platformio.ini
 /secrets.yaml
 .DS_Store
+
+# Transient outputs from scripts/sync-upstream.py
+/sync-summary.json

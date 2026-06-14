@@ -1,0 +1,26 @@
+substitutions:
+  illuminance_update_interval: "2s"
+  hidden_ssid: "false"
+  log_level: "NONE"
+
+  device_config:
+    ethernet_enabled: false
+    co2_enabled: false
+    bluetooth_enabled: true
+    sensor_variant: "sen0609"
+    model: "everything-presence-lite"
+
+dashboard_import:
+  package_import_url: github://kjake/athom-esp32-configs/athom-ps02c3-sensor.yaml@main
+  import_full_config: false
+
+# The SEN0609-compatible radar (S3KM111L / RD-01 module on the PS02C3) needs
+# its `mmwave_sensor` switch turned on after boot so the chip starts streaming.
+wifi:
+  on_connect:
+    - switch.turn_on: mmwave_sensor
+
+packages:
+  device_base: !include common/ps02c3-base.yaml
+  sen0609_base: !include common/sen0609-base.yaml
+  bluetooth_base: !include common/bluetooth-base.yaml

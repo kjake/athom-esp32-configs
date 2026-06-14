@@ -1,0 +1,91 @@
+name: Upstream Sync
+
+on:
+  schedule:
+    # Daily at 06:23 UTC. Off-peak time picked to avoid GitHub Actions cron contention.
+    - cron: "23 6 * * *"
+  workflow_dispatch:
+    inputs:
+      bootstrap:
+        description: "Allow seeding new vendor files (run after editing upstream-sources.yaml)"
+        required: false
+        default: "false"
+        type: choice
+        options:
+          - "false"
+          - "true"
+
+permissions:
+  contents: write
+  pull-requests: write
+
+concurrency:
+  group: upstream-sync
+  cancel-in-progress: false
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Run sync script
+        id: sync
+        run: |
+          extra_args=""
+          if [ "${{ github.event.inputs.bootstrap }}" = "true" ]; then
+            extra_args="--bootstrap"
+          fi
+          python3 scripts/sync-upstream.py $extra_args
+
+      - name: Inspect summary
+        id: summary
+        run: |
+          if [ ! -f sync-summary.json ]; then
+            echo "No summary produced, treating as no-op."
+            echo "any_change=false" >> "$GITHUB_OUTPUT"
+            echo "any_conflict=false" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+          any_change=$(python3 -c 'import json,sys; print(str(json.load(open("sync-summary.json"))["any_change"]).lower())')
+          any_conflict=$(python3 -c 'import json,sys; print(str(json.load(open("sync-summary.json"))["any_conflict"]).lower())')
+          echo "any_change=$any_change" >> "$GITHUB_OUTPUT"
+          echo "any_conflict=$any_conflict" >> "$GITHUB_OUTPUT"
+
+      - name: Remove machine-readable summary before commit
+        if: steps.summary.outputs.any_change == 'true'
+        run: rm -f sync-summary.json
+
+      - name: Create Pull Request
+        if: steps.summary.outputs.any_change == 'true'
+        uses: peter-evans/create-pull-request@v7
+        with:
+          branch: upstream-sync/auto
+          base: main
+          title: "Upstream sync${{ steps.summary.outputs.any_conflict == 'true' && ' (conflicts — review needed)' || '' }}"
+          body: |
+            Automated upstream sync produced by `.github/workflows/upstream-sync.yml`.
+
+            Sources tracked in `.github/upstream-sources.yaml`. The sync script
+            fetched each upstream file, refreshed the vendored copies under
+            `upstream/`, and 3-way-merged into the corresponding derived files
+            where configured.
+
+            ${{ steps.summary.outputs.any_conflict == 'true' && 'Conflict markers are present in at least one derived file — this PR is opened as a draft until they are resolved manually.' || 'No conflicts were detected. Please verify the changes before merging.' }}
+
+            Step summary above includes a per-source breakdown.
+          commit-message: |
+            Upstream sync
+
+            Automated refresh of vendored upstream files and propagation to
+            derived files via 3-way merge.
+          draft: ${{ steps.summary.outputs.any_conflict == 'true' }}
+          labels: |
+            upstream-sync
+          delete-branch: true

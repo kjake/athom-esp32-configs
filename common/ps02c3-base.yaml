@@ -1,0 +1,199 @@
+esphome:
+  name: ${name}
+  comment: Single-Target mmWave Radar Sensor
+  friendly_name: ${friendly_name}
+  name_add_mac_suffix: True
+  project:
+    name: EverythingSmartTechnology.Athom PS02C3
+    version: "1.4.2"
+  on_boot:
+    priority: -100
+    then:
+      - lambda: |-
+          if (std::string("${ device_config.bluetooth_enabled | lower }") == "true") {
+            id(firmware_ble).publish_state("Enabled");
+          } else {
+            id(firmware_ble).publish_state("Disabled");
+          }
+
+          if (std::string("${ device_config.co2_enabled | lower }") == "true") {
+            id(firmware_co2).publish_state("Enabled");
+          } else {
+            id(firmware_co2).publish_state("Disabled");
+          }
+  platformio_options:
+    board_build.flash_mode: dio
+
+esp32:
+  board: esp32-c3-devkitm-1
+  flash_size: 4MB
+  framework:
+    type: esp-idf
+    version: recommended
+
+# Enable logging
+logger:
+  baud_rate: 115200
+  hardware_uart: UART0
+  level: ${log_level}
+
+# Enable Home Assistant API
+api:
+
+ota:
+  - platform: esphome
+    id: ota_esphome
+  - platform: http_request
+    id: ota_http_request
+
+http_request:
+
+wifi:
+
+improv_serial:
+
+i2c:
+  - id: bus_a
+    sda: 18
+    scl: 19
+    scan: true
+
+light:
+  - platform: status_led
+    name: ESP32 LED
+    id: esp32_led
+    pin: GPIO2
+    restore_mode: ALWAYS_OFF
+    entity_category: config
+
+number:
+  - platform: template
+    name: "PIR Off Delay"
+    icon: mdi:clock-end
+    entity_category: config
+    id: pir_off_latency
+    min_value: 1
+    max_value: 120
+    initial_value: 10
+    optimistic: true
+    step: 1
+    restore_value: true
+    unit_of_measurement: seconds
+    mode: slider
+  - platform: template
+    name: "PIR On Delay"
+    icon: mdi:clock-start
+    entity_category: config
+    id: pir_on_latency
+    min_value: 0
+    max_value: 1
+    initial_value: 0
+    optimistic: true
+    step: 0.1
+    restore_value: true
+    unit_of_measurement: seconds
+    mode: slider
+    disabled_by_default: true
+  - platform: template
+    name: "Illuminance Offset"
+    id: illuminance_offset_ui
+    unit_of_measurement: "lx"
+    min_value: -100
+    max_value: 100
+    step: 5
+    mode: slider
+    update_interval: never
+    optimistic: true
+    restore_value: true
+    initial_value: 0
+    icon: "mdi:brightness-5"
+    entity_category: config
+    on_value:
+      - lambda: "id(illuminance_sensor).update();"
+
+sensor:
+  - platform: bh1750
+    name: "${room} Illuminance"
+    id: illuminance_sensor
+    address: 0x23
+    update_interval: ${illuminance_update_interval}
+    accuracy_decimals: 0
+    filters:
+      - lambda: "return x + id(illuminance_offset_ui).state;"
+      - or:
+          - delta: 5%
+          - delta: 5
+      - clamp:
+          min_value: 0
+
+binary_sensor:
+  - platform: gpio
+    pin:
+      number: 9
+      mode: INPUT_PULLUP
+      inverted: true
+    id: flash_button
+    internal: True
+    filters:
+      - delayed_on: 50ms
+    on_multi_click:
+      - timing:
+          - ON for 0.2s to 3s
+          - OFF for 0.1s to 2s
+          - ON for 0.2s to 3s
+          - OFF for 0.1s to 2s
+          - ON for at least 5s
+        then:
+          - repeat:
+              count: 5
+              then:
+                - light.turn_on: esp32_led
+                - delay: 150ms
+                - light.turn_off: esp32_led
+                - delay: 150ms
+          - light.turn_on: esp32_led
+          - button.press: factory_reset_button
+  - platform: gpio
+    pin:
+      number: 3
+      mode: INPUT_PULLUP
+    name: ${room} PIR
+    id: pir_motion_sensor
+    device_class: motion
+    filters:
+      - delayed_on: !lambda "return id(pir_on_latency).state * 1000;"
+      - delayed_off: !lambda "return id(pir_off_latency).state * 1000;"
+
+button:
+  - platform: restart
+    icon: mdi:power-cycle
+    name: "ESP Reboot"
+    entity_category: config
+  - platform: factory_reset
+    id: "factory_reset_button"
+    internal: True
+
+select:
+  - platform: template
+    id: firmware_ble
+    name: Bluetooth Proxy
+    icon: "mdi:bluetooth"
+    entity_category: diagnostic
+    optimistic: true
+    restore_value: true
+    options:
+      - "Disabled"
+      - "Enabled"
+    initial_option: "Disabled"
+
+  - platform: template
+    id: firmware_co2
+    name: CO2 Sensor
+    icon: "mdi:molecule-co2"
+    entity_category: diagnostic
+    optimistic: true
+    restore_value: true
+    options:
+      - "Disabled"
+      - "Enabled"
+    initial_option: "Disabled"
