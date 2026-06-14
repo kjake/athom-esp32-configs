@@ -34,7 +34,8 @@ PS02C3, an extra digital occupancy output on GPIO4.
 │   │       ├── sen0609-base.yaml
 │   │       └── modules/co2.yaml
 │   └── athom-tech/
-│       └── athom-ld2450-sensor.yaml
+│       ├── athom-ld2450-sensor.yaml      # Athom's PS02C3MZ config
+│       └── athom-presence-sensor-v3.yaml # Athom's PS02C3 config (their project_name labels it "PS01C3")
 └── scripts/
     └── sync-upstream.py          # Fetches upstream files and 3-way merges into derived files
 ```
