@@ -4,7 +4,7 @@ substitutions:
   room: ""
   device_description: "athom esp32c3 ld2450 motion target tracking sensor"
   project_name: "China Athom Technology.PS02C3MZ LD2450"
-  project_version: "v2.0.4"
+  project_version: "v2.0.7"
   update_interval: 60s
   # Define a domain for this device to use. i.e. iot.home.lan (so device will appear as athom-smart-plug-v2.iot.home.lan in DNS/DHCP logs)
   dns_domain: ""
@@ -29,7 +29,7 @@ esphome:
   comment: "${device_description}"
   area: "${room}"
   name_add_mac_suffix: true
-  min_version: 2025.7.0
+  min_version: 2026.8.0
   project:
     name: "${project_name}"
     version: "${project_version}"
@@ -66,6 +66,27 @@ web_server:
 
 ota:
   - platform: esphome
+    id: ota_esphome
+  # Enables OTA firmware flashing from a URL (used by the update component below)
+  - platform: http_request
+    id: ota_http_request
+
+# Required by the ota http_request platform and the update component.
+# verify_ssl: false skips TLS cert validation to reduce heap/RAM pressure during
+# the download; the manifest's MD5 still verifies firmware integrity before flashing.
+http_request:
+  id: http_request_component
+  verify_ssl: false
+
+update:
+  # Managed updates via HTTP request: periodically checks the published manifest
+  # and exposes a "Firmware Update" entity, pointing at this device's GitHub Pages
+  # manifest. Pages URLs avoid the redirect/buffer issues of Release download URLs.
+  - platform: http_request
+    id: update_http_request
+    name: "Firmware Update"
+    source: https://athom-tech.github.io/esp32-configs/firmware/athom-ld2450-sensor.manifest.json
+    # update_interval defaults to 6h (how often it checks, not installs)
 
 network:
   enable_ipv6: ${ipv6_enable}
@@ -306,6 +327,8 @@ binary_sensor:
       inverted: true
     name: "Button"
     disabled_by_default: true
+    filters:
+      - delayed_on_off: 20ms
     on_multi_click:
       - timing:
           - ON for at least 4s
